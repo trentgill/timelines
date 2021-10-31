@@ -3,6 +3,8 @@
 local tl = include('lib/timeline')
 local s = include('lib/sequins_extended')
 local fox = include('lib/foxdot')
+-- local quantize = include('lib/quantize') -- UNTESTED
+-- local hotswap = include('lib/hotswap') -- UNTESTED
 
 function init()
     clock.tempo = 120
