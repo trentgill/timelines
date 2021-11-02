@@ -14,39 +14,40 @@ HS = {}
 HS._type = function(o)
     -- return a char representing the type
     if s.is_sequins(o) then return 's'
-    elseif tl.is_timeline(o) then return 't'
+    -- elseif tl.is_timeline(o) then return 't'
     else print 'hotswap does not know this type'
     end
 end
 
 HS._swap = {}
 
-HS._swap.s = function(hsobj, data) -- sequins updater
-    hsobj[2]:settable(v.data) -- naively copy the new table into old sequins
-    -- TODO handle flow-modifiers & nested sequins
+HS._swap.s = function(t, v) -- sequins
+    t:settable(v.data)
 end
 
-HS._swap.t = function(hsobj, data) -- timeline updater
+HS._swap.t = function(t, v) -- timeline
     -- TODO
     -- attempt to handle nested sequins objects
 end
 
 HS._reg = {} -- a place to register updateable sequins
-HS.__index = HS._reg
+HS.__index = function(self, ix)
+    return HS._reg[ix][2]
+end
 
 HS.__newindex = function(self, ix, v)
     local t = HS._type(v)
     if t then
         if HS._reg[ix] then -- key already exists
-            -- warning! we don't check that the new type matches
-            HS._swap[t](HS._reg[ix], v)
+            -- warning! we assume the new type matches
+            HS._swap[t](HS._reg[ix][2], v)
         else -- new key
             HS._reg[ix] = {t,v} -- register with type annotation
         end
     end
 end
 
-return HS
+return setmetatable(HS, HS)
 
 ------------------------------------
 [[-- example usage / testing
