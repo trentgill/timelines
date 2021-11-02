@@ -33,10 +33,24 @@ function S.new(t)
     return s
 end
 
--- just adds totable to .setdata
+-- can this be generalized to cover every/count/times etc
 function S.setdata(self, t)
+    -- FIXME not handling modifiers yet
+    --      add this after extending __tostring so we can visualize
+    if S.is_sequins(t) then t = t.data end -- handle sequins as input
+
     t = totable(t) -- convert a string to a table of chars
-    self.data   = t
+
+    -- walk the table to check for matching nested sequins
+    for i=1,#t do
+        if S.is_sequins(t[i]) and S.is_sequins(self.data[i]) then
+            self.data[i]:settable(t[i])
+        else
+            self.data[i] = t[i] -- copy table piecemeal
+        end
+    end
+    self.data[#t+1] = nil -- disregard any surplus data
+
     self.length = #t
     self.ix = wrap_index(self, self.ix)
 end
@@ -63,5 +77,31 @@ end
 
 S.metaix.copy = S.copy
 S.metaix.settable = S.setdata -- use updated defn
+
+rawset(S,__len,
+    function(t)
+        return t.length -- use memoized data length, aka #(t.data)
+    end)
+
+rawset(S,__tostring,
+    function(t)
+        -- data (will recursively call for other sequins)
+        local st = {}
+        for i=1,t.length do
+            st[i] = tostring(t.data[i])
+        end
+        local s = string.format('s[%i]{%s}', t.ix, table.concat(st,','))
+
+        -- modifiers
+        -- TODO need to add metadata to modifiers so they can be introspected
+
+        -- transforms
+        -- TODO not sure what the structure is yet
+
+        -- state
+        -- s = string.format('%s<%s>', s, t.ix)
+
+        return s
+    end)
 
 return setmetatable(S, S) -- use updated metamethods
